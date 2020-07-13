@@ -24,7 +24,7 @@ class GameViewController: UIViewController {
 		
 		// Present scene to the view
 		spriteKitView?.presentScene(scene)
-    }
+	}
 
 	// Disable auto rotation
     override var shouldAutorotate: Bool {
