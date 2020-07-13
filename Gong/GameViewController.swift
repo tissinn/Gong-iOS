@@ -19,7 +19,8 @@ class GameViewController: UIViewController {
 		
 		// Create & configure the scene
 		scene = GameScene(size: spriteKitView!.bounds.size)
-		scene.scaleMode = .aspectFit
+		scene.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+		scene.scaleMode = .aspectFill
 		
 		// Present scene to the view
 		spriteKitView?.presentScene(scene)
