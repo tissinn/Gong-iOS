@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C75A9C8624BD1E7100ADBFE9 /* PaddleSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = C75A9C8524BD1E7100ADBFE9 /* PaddleSprite.swift */; };
+		C75A9C8824BD254600ADBFE9 /* BallSprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = C75A9C8724BD254600ADBFE9 /* BallSprite.swift */; };
 		C7B84CBC24BBBF8D00C9249D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B84CBB24BBBF8D00C9249D /* AppDelegate.swift */; };
 		C7B84CC224BBBF8D00C9249D /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B84CC124BBBF8D00C9249D /* GameScene.swift */; };
 		C7B84CC424BBBF8D00C9249D /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B84CC324BBBF8D00C9249D /* GameViewController.swift */; };
@@ -14,6 +16,7 @@
 		C7B84CC924BBBF8D00C9249D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C7B84CC824BBBF8D00C9249D /* Assets.xcassets */; };
 		C7B84CCC24BBBF8D00C9249D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C7B84CCA24BBBF8D00C9249D /* LaunchScreen.storyboard */; };
 		C7B84CD724BBBF8D00C9249D /* GongTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B84CD624BBBF8D00C9249D /* GongTests.swift */; };
+		C7E67C8424BE49180084D057 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = C7E67C7124BE49170084D057 /* OFL.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,6 +30,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C75A9C8524BD1E7100ADBFE9 /* PaddleSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaddleSprite.swift; sourceTree = "<group>"; };
+		C75A9C8724BD254600ADBFE9 /* BallSprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallSprite.swift; sourceTree = "<group>"; };
 		C7B84CB824BBBF8D00C9249D /* Gong.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gong.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7B84CBB24BBBF8D00C9249D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C7B84CC124BBBF8D00C9249D /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -38,6 +43,7 @@
 		C7B84CD224BBBF8D00C9249D /* GongTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GongTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7B84CD624BBBF8D00C9249D /* GongTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GongTests.swift; sourceTree = "<group>"; };
 		C7B84CD824BBBF8D00C9249D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C7E67C7124BE49170084D057 /* OFL.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = OFL.txt; path = Montserrat/OFL.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,8 +88,11 @@
 				C7B84CBB24BBBF8D00C9249D /* AppDelegate.swift */,
 				C7B84CC124BBBF8D00C9249D /* GameScene.swift */,
 				C7B84CC324BBBF8D00C9249D /* GameViewController.swift */,
+				C75A9C8524BD1E7100ADBFE9 /* PaddleSprite.swift */,
+				C75A9C8724BD254600ADBFE9 /* BallSprite.swift */,
 				C7B84CC524BBBF8D00C9249D /* Main.storyboard */,
 				C7B84CC824BBBF8D00C9249D /* Assets.xcassets */,
+				C7E67C7124BE49170084D057 /* OFL.txt */,
 				C7B84CCA24BBBF8D00C9249D /* LaunchScreen.storyboard */,
 				C7B84CCD24BBBF8D00C9249D /* Info.plist */,
 			);
@@ -182,6 +191,7 @@
 			files = (
 				C7B84CC724BBBF8D00C9249D /* Main.storyboard in Resources */,
 				C7B84CC924BBBF8D00C9249D /* Assets.xcassets in Resources */,
+				C7E67C8424BE49180084D057 /* OFL.txt in Resources */,
 				C7B84CCC24BBBF8D00C9249D /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -202,6 +212,8 @@
 			files = (
 				C7B84CC224BBBF8D00C9249D /* GameScene.swift in Sources */,
 				C7B84CC424BBBF8D00C9249D /* GameViewController.swift in Sources */,
+				C75A9C8824BD254600ADBFE9 /* BallSprite.swift in Sources */,
+				C75A9C8624BD1E7100ADBFE9 /* PaddleSprite.swift in Sources */,
 				C7B84CBC24BBBF8D00C9249D /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -372,7 +384,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.tysonmak.Gong;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -390,7 +402,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.tysonmak.Gong;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
