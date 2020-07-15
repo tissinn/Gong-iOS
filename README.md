@@ -8,4 +8,4 @@ Just clone this repo and open in xcode. To play the game, you can compile and ru
 
 ## Screenshots
 
-![pic1](https://github.com/tissinn/Gong-iOS/blob/master/Screenshots/1.PNG)
+![](https://github.com/tissinn/Gong-iOS/blob/master/Screenshots/1.PNG = 375x667)
