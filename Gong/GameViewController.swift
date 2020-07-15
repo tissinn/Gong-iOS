@@ -14,8 +14,6 @@ class GameViewController: UIViewController {
 		// Create & configure the view
 		let spriteKitView = view as? SKView
 		spriteKitView?.isMultipleTouchEnabled = false
-		spriteKitView?.showsFPS = true
-		spriteKitView?.showsNodeCount = true
 		
 		// Create & configure the scene
 		scene = GameScene(size: spriteKitView!.bounds.size)

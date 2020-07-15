@@ -4,8 +4,10 @@ import GameplayKit
 let BALL_MASK: UInt32 = 0x1 << 3
 
 let BALL_BASE_SPEED: CGFloat = 350
-var BALL_Y_SPEED: CGFloat = 350
-let BALL_MAX_ANGLE: CGFloat = CGFloat.pi / 2
+var BALL_SPEED: CGFloat = BALL_BASE_SPEED
+let BALL_MAX_ANGLE: CGFloat = CGFloat.pi / 3
+let BALL_MIN_Y_INCREMENT: CGFloat = 150
+let BALL_SPEED_INCREMENT: CGFloat = 10
 
 class BallSprite {
 	

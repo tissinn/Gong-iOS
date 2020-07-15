@@ -20,10 +20,27 @@ enum PaddlePosition {
 	case Bottom
 }
 
+let PADDLE_DEFAULT_DIFFICULTY: [Int: CGFloat] = [
+	5: 0.325,
+	4: 0.300,
+	3: 0.275,
+	2: 0.250,
+	1: 0.225,
+	0: 0.150,
+	-1: 0.200,
+	-2: 0.150,
+	-3: 0.125,
+	-4: 0.100,
+	-5: 0.075
+]
+
 class PaddleSprite {
 	
 	public var sprite: SKSpriteNode!
 	public var usesAi: Bool = false
+	
+	private var previous = CGPoint(x: 0, y: 0)
+	public var velocity = CGVector(dx: 0, dy: 0)
 	
 	public var paddlePath: SKShapeNode!
 	public var paddleLeftEnd: SKShapeNode!
@@ -55,7 +72,7 @@ class PaddleSprite {
 		scoreLabel.text = "\(score)"
 		scoreLabel.position = CGPoint(x: 0, y: (DEFAULT_PADDING - DEFAULT_MARGIN) / 2)
 		scoreLabel.fontSize = 48
-		scoreLabel.fontColor = UIColor(red: 38/255, green: 43/255, blue: 68/255, alpha: 1)
+		scoreLabel.fontColor = UIColor(red: 139/255, green: 155/255, blue: 180/255, alpha: 1)
 		scoreLabel.horizontalAlignmentMode = .center
 		scoreLabel.verticalAlignmentMode = .center
 		
@@ -71,22 +88,32 @@ class PaddleSprite {
 		// Create the paddle path graphic
 		paddlePath = SKShapeNode(rectOf: CGSize(width: frame.size.width - DEFAULT_PADDLE_WIDTH, height: DEFAULT_PADDLE_HEIGHT / 8))
 		paddlePath.position = sprite.position
-		paddlePath.fillColor = UIColor(red: 38/255, green: 43/255, blue: 68/255, alpha: 1)
 		paddlePath.strokeColor = .clear
 		
 		paddleLeftEnd = SKShapeNode(circleOfRadius: DEFAULT_PADDLE_HEIGHT / 4)
 		paddleLeftEnd.position = CGPoint(x: -(frame.size.width / 2) + (DEFAULT_PADDLE_WIDTH / 2), y: sprite.position.y)
-		paddleLeftEnd.fillColor = UIColor(red: 38/255, green: 43/255, blue: 68/255, alpha: 1)
 		paddleLeftEnd.strokeColor = .clear
 		
 		paddleRightEnd = SKShapeNode(circleOfRadius: DEFAULT_PADDLE_HEIGHT / 4)
 		paddleRightEnd.position = CGPoint(x: (frame.size.width / 2) - (DEFAULT_PADDLE_WIDTH / 2), y: sprite.position.y)
-		paddleRightEnd.fillColor = UIColor(red: 38/255, green: 43/255, blue: 68/255, alpha: 1)
 		paddleRightEnd.strokeColor = .clear
+		
+		if !ai {
+			paddlePath.fillColor = UIColor(red: 0, green: 153/255, blue: 219/255, alpha: 1)
+			paddleLeftEnd.fillColor = UIColor(red: 0/255, green: 153/255, blue: 219/255, alpha: 1)
+			paddleRightEnd.fillColor = UIColor(red: 0/255, green: 153/255, blue: 219/255, alpha: 1)
+		} else {
+			paddlePath.fillColor = UIColor(red: 1, green: 0/255, blue: 68/255, alpha: 1)
+			paddleLeftEnd.fillColor = UIColor(red: 1, green: 0/255, blue: 68/255, alpha: 1)
+			paddleRightEnd.fillColor = UIColor(red: 1, green: 0/255, blue: 68/255, alpha: 1)
+		}
 	}
 	
 	public func update(_ delta: CGFloat) {
 		scoreLabel.text = "\(score)"
+		
+		velocity = CGVector(dx: sprite.position.x - previous.x, dy: sprite.position.y - previous.y)
+		previous = sprite.position
 	}
 	
 	public func input(_ location: CGPoint) {

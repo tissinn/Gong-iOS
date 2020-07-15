@@ -6,7 +6,9 @@ let WALL_MASK: UInt32 = 0x1 << 4
 class GameScene: SKScene, SKPhysicsContactDelegate {
 	
 	// Background sprites
-	var centerLine: SKSpriteNode!
+	var centerLineLeft: SKSpriteNode!
+	var centerLineRight: SKSpriteNode!
+	var centerCircle: SKShapeNode!
 		
 	// Player enemy & ball
 	var player: PaddleSprite!
@@ -40,10 +42,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		rightWall.physicsBody?.categoryBitMask = WALL_MASK
 		addChild(rightWall)
 		
-		// Center divider sprite
-		centerLine = SKSpriteNode(color: UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1), size: CGSize(width: frame.size.width, height: DEFAULT_PADDLE_HEIGHT / 4))
-		centerLine.position = CGPoint(x: 0, y: 0)
-		addChild(centerLine)
+		// Center divider
+		centerLineLeft = SKSpriteNode(color: UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1), size: CGSize(width: (frame.size.width / 2) - (DEFAULT_PADDLE_WIDTH / 2), height: DEFAULT_PADDLE_HEIGHT / 4))
+		centerLineLeft.position = CGPoint(x: -(frame.size.width / 2) + (centerLineLeft.size.width / 2), y: 0)
+		addChild(centerLineLeft!)
+		
+		centerLineRight = SKSpriteNode(color: UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1), size: CGSize(width: (frame.size.width / 2) - (DEFAULT_PADDLE_WIDTH / 2), height: DEFAULT_PADDLE_HEIGHT / 4))
+		centerLineRight.position = CGPoint(x: (frame.size.width / 2) - (centerLineRight.size.width / 2), y: 0)
+		addChild(centerLineRight!)
+		
+		centerCircle = SKShapeNode(circleOfRadius: DEFAULT_PADDLE_WIDTH / 2)
+		centerCircle.position = CGPoint(x: 0, y: 0)
+		centerCircle.fillColor = .clear
+		centerCircle.lineWidth = DEFAULT_PADDLE_HEIGHT / 4
+		centerCircle.strokeColor = UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1)
+		addChild(centerCircle!)
 		
 		// Player enemy & ball
 		player = PaddleSprite(frame: frame, position: .Bottom, ai: false)
@@ -89,7 +102,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 			}
 			
 			if ball.shape.position.y < enemy.sprite.position.y {
-				enemy.sprite.run(.moveTo(x: destination, duration: 0.15))
+				enemy.sprite.run(.moveTo(x: destination, duration: 0.175))
 			}
 		}
 		
@@ -98,7 +111,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 			playerScored = true
 			player.score += 1
 			
-			BALL_Y_SPEED = BALL_BASE_SPEED
+			BALL_SPEED = BALL_BASE_SPEED
 			
 			ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
 			
@@ -126,7 +139,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 			enemyScored = true
 			enemy.score += 1
 			
-			BALL_Y_SPEED = BALL_BASE_SPEED
+			BALL_SPEED = BALL_BASE_SPEED
 			
 			ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
 			
@@ -180,17 +193,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		case BALL_MASK | PADDLE_MASK:
 			hapticHeavy.impactOccurred()
 			
-			// Calculate new ball direction
+			// Calculate the intersection of the ball
 			let relativeIntersect = player.sprite.position.x - ball.shape.position.x
-			let normalizedIntersect = (relativeIntersect / (DEFAULT_PADDLE_WIDTH / 2))
+			let normalizedIntersect = relativeIntersect / (DEFAULT_PADDLE_WIDTH / 2)
+			let bounceAngle = normalizedIntersect * BALL_MAX_ANGLE
 			
-			// If ball hits the top face of the paddle
-			if normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y > player.sprite.position.y {
-				ball.shape.physicsBody?.velocity.dx = (-1 * (normalizedIntersect * BALL_BASE_SPEED))
-				ball.shape.physicsBody?.velocity.dy = BALL_Y_SPEED
+			// Set the ball's velocity
+			if normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y >= player.sprite.position.y {
+				let ballDx = BALL_SPEED * -sin(bounceAngle)
+				var ballDy = BALL_SPEED *  cos(bounceAngle)
+				
+				if ballDy < BALL_MIN_Y_INCREMENT { ballDy = BALL_MIN_Y_INCREMENT }
+				ball.shape.physicsBody?.velocity = CGVector(dx: ballDx, dy: ballDy)
 			}
 			
-			BALL_Y_SPEED += 10
+			// Increase ball speed
+			BALL_SPEED += BALL_SPEED_INCREMENT
 			
 			break
 		// Ball collides with AI
@@ -199,16 +217,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 			
 			// Calculate new ball direction
 			let relativeIntersect = enemy.sprite.position.x - ball.shape.position.x
-			let normalizedIntersect = (relativeIntersect / (DEFAULT_PADDLE_WIDTH / 2))
+			let normalizedIntersect = relativeIntersect / (DEFAULT_PADDLE_WIDTH / 2)
+			let bounceAngle = normalizedIntersect *  BALL_MAX_ANGLE
 			
 			// If ball hits bottom of the paddle
-			if normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y < enemy.sprite.position.y {
-				ball.shape.physicsBody?.velocity.dx = (-1 * (normalizedIntersect * BALL_BASE_SPEED))
-				ball.shape.physicsBody?.velocity.dy = -BALL_Y_SPEED
+			if normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y <= enemy.sprite.position.y {
+				let ballDx = BALL_SPEED * -sin(bounceAngle)
+				var ballDy = BALL_SPEED *  cos(bounceAngle)
+				
+				if ballDy < BALL_MIN_Y_INCREMENT { ballDy = BALL_MIN_Y_INCREMENT }
+				ball.shape.physicsBody?.velocity = CGVector(dx: ballDx, dy: -ballDy)
 			}
 			
-			BALL_Y_SPEED += 10
-
+			// Increase ball speed
+			BALL_SPEED += BALL_SPEED_INCREMENT
 			
 			break
 		default: break
