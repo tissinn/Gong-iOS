@@ -15,11 +15,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 	var enemy: PaddleSprite!
 	var ball: BallSprite!
 	
+	// Ball particle emitter
+	var ballParticle: SKEmitterNode!
+	
 	var playerScored = false
 	var enemyScored = false
-		
+	
 	// Executes once the scene is presented
-	override func sceneDidLoad() {		
+	override func sceneDidLoad() {
 		// Set background color
 		backgroundColor = UIColor(red: 24/255, green: 20/255, blue: 37/255, alpha: 1)
 		
@@ -75,8 +78,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		
 		ball = BallSprite()
 		addChild(ball.shape!)
-	
 		ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: -300)
+		
+		// Create particle emitter
+		ballParticle = SKEmitterNode()
 	}
 	
 	// Update callback
@@ -88,9 +93,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		player.update(delta)
 		enemy.update(delta)
 		
+		// Ai follow the ball
 		if (ball.shape.physicsBody?.velocity.dy)! > 0 {
 			var destination = ball.shape.position.x
 			
+			// If ball is to the left or right of enemy
 			if destination < enemy.sprite.position.x {
 				if destination - (DEFAULT_PADDLE_WIDTH / 2) < -(frame.size.width / 2) {
 					destination = -(frame.size.width / 2) + (DEFAULT_PADDLE_WIDTH / 2)
@@ -101,66 +108,60 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 				}
 			}
 			
-			if ball.shape.position.y < enemy.sprite.position.y {
-				enemy.sprite.run(.moveTo(x: destination, duration: 0.175))
+			// Check if ball is past the paddle
+			if ball.shape.position.y + ball.radius >= enemy.sprite.position.y - (DEFAULT_PADDLE_HEIGHT / 2) {
+				destination = enemy.sprite.position.x
 			}
+			
+			// Move to destination
+			enemy.sprite.run(.moveTo(x: destination, duration: 0.15))
 		}
 		
 		// If player scores
 		if ball.shape.position.y - (DEFAULT_PADDLE_HEIGHT / 2) > frame.size.height / 2 && !playerScored {
-			playerScored = true
-			player.score += 1
-			
-			BALL_SPEED = BALL_BASE_SPEED
-			
-			ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-			
-			let hapticHeavy = UIImpactFeedbackGenerator(style: .heavy)
-			
-			let impact = SKAction.run({
-				hapticHeavy.impactOccurred()
-			})
-			let impactWait = SKAction.wait(forDuration: 0.15)
-			let fadeOut = SKAction.fadeOut(withDuration: 0)
-			let wait = SKAction.wait(forDuration: 1)
-			let move = SKAction.move(to: CGPoint(x: 0, y: 0), duration: 0)
-			let fadeIn = SKAction.fadeIn(withDuration: 1)
-			
-			let serve = SKAction.run({
-				self.ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: 300)
-				self.playerScored = false
-			})
-			
-			ball.shape.run(.sequence([ impact, impactWait, impact, impactWait, impact, fadeOut, wait, move, fadeIn, serve ]))
+			didScore(false)
 		}
 		
 		// If enemy scores
 		if ball.shape.position.y + (DEFAULT_PADDLE_HEIGHT / 2) < -(frame.size.height / 2) && !enemyScored {
+			didScore(true)
+		}
+	}
+	
+	// Did paddle score
+	private func didScore(_ isAi: Bool) {
+		if !isAi {
+			playerScored = true
+			player.score += 1
+		} else {
 			enemyScored = true
 			enemy.score += 1
-			
-			BALL_SPEED = BALL_BASE_SPEED
-			
-			ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-			
-			let hapticHeavy = UIImpactFeedbackGenerator(style: .heavy)
-			
-			let impact = SKAction.run({
-				hapticHeavy.impactOccurred()
-			})
-			let impactWait = SKAction.wait(forDuration: 0.15)
-			let fadeOut = SKAction.fadeOut(withDuration: 0)
-			let wait = SKAction.wait(forDuration: 1)
-			let move = SKAction.move(to: CGPoint(x: 0, y: 0), duration: 0)
-			let fadeIn = SKAction.fadeIn(withDuration: 1)
-			
-			let serve = SKAction.run({
-				self.ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: -300)
-				self.enemyScored = false
-			})
-			
-			ball.shape.run(.sequence([ impact, impactWait, impact, impactWait, impact, fadeOut, wait, move, fadeIn, serve ]))
 		}
+		
+		// Reset ball speed
+		BALL_SPEED = BALL_BASE_SPEED
+		
+		// Reset ball velocity
+		ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+		
+		// Create action sequence
+		let hapticHeavy = UIImpactFeedbackGenerator(style: .heavy)
+		let impact = SKAction.run({
+			hapticHeavy.impactOccurred()
+		})
+		let impactWait = SKAction.wait(forDuration: 0.15)
+		let fadeOut = SKAction.fadeOut(withDuration: 0)
+		let wait = SKAction.wait(forDuration: 1)
+		let move = SKAction.move(to: CGPoint(x: 0, y: 0), duration: 0)
+		let fadeIn = SKAction.fadeIn(withDuration: 1)
+		let serve = SKAction.run({
+			let serveDirection = !isAi ? 300 : -300
+			self.ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: serveDirection)
+			if !isAi { self.playerScored = false } else { self.enemyScored = false }
+		})
+		
+		// Run the sequence
+		ball.shape.run(.sequence([ impact, impactWait, impact, impactWait, impact, fadeOut, wait, move, fadeIn, serve ]))
 	}
 	
 	// Process and handle input
@@ -193,19 +194,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		case BALL_MASK | PADDLE_MASK:
 			hapticHeavy.impactOccurred()
 			
-			// Calculate the intersection of the ball
-			let relativeIntersect = player.sprite.position.x - ball.shape.position.x
-			let normalizedIntersect = relativeIntersect / (DEFAULT_PADDLE_WIDTH / 2)
-			let bounceAngle = normalizedIntersect * BALL_MAX_ANGLE
-			
-			// Set the ball's velocity
-			if normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y >= player.sprite.position.y {
-				let ballDx = BALL_SPEED * -sin(bounceAngle)
-				var ballDy = BALL_SPEED *  cos(bounceAngle)
-				
-				if ballDy < BALL_MIN_Y_INCREMENT { ballDy = BALL_MIN_Y_INCREMENT }
-				ball.shape.physicsBody?.velocity = CGVector(dx: ballDx, dy: ballDy)
-			}
+			// Reflect ball towards enemy
+			reflectBall(false)
 			
 			// Increase ball speed
 			BALL_SPEED += BALL_SPEED_INCREMENT
@@ -215,25 +205,50 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		case BALL_MASK | PADDLE_AI_MASK:
 			hapticHeavy.impactOccurred()
 			
-			// Calculate new ball direction
-			let relativeIntersect = enemy.sprite.position.x - ball.shape.position.x
-			let normalizedIntersect = relativeIntersect / (DEFAULT_PADDLE_WIDTH / 2)
-			let bounceAngle = normalizedIntersect *  BALL_MAX_ANGLE
-			
-			// If ball hits bottom of the paddle
-			if normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y <= enemy.sprite.position.y {
-				let ballDx = BALL_SPEED * -sin(bounceAngle)
-				var ballDy = BALL_SPEED *  cos(bounceAngle)
-				
-				if ballDy < BALL_MIN_Y_INCREMENT { ballDy = BALL_MIN_Y_INCREMENT }
-				ball.shape.physicsBody?.velocity = CGVector(dx: ballDx, dy: -ballDy)
-			}
+			// Reflect ball towards player
+			reflectBall(true)
 			
 			// Increase ball speed
 			BALL_SPEED += BALL_SPEED_INCREMENT
 			
 			break
 		default: break
+		}
+	}
+	
+	// Calculate ball's direction
+	private func reflectBall(_ isAi: Bool) {
+		// Calculate the intersection of the ball
+		var relativeIntersect: CGFloat = 0
+		if !isAi { relativeIntersect = player.sprite.position.x - ball.shape.position.x }
+		else { relativeIntersect = enemy.sprite.position.x - ball.shape.position.x }
+		
+		// Normalize the intersection
+		var normalizedIntersect = relativeIntersect / (DEFAULT_PADDLE_WIDTH / 2)
+		
+		// Check if == 0.0
+		if normalizedIntersect == 0 {
+			let rand = Int.random(in: 1...2)
+			if rand == 1 { normalizedIntersect = 0.1 }
+			else if rand == 2 { normalizedIntersect = -0.1 }
+		}
+		
+		// Calculate ball's angle
+		let bounceAngle = normalizedIntersect * BALL_MAX_ANGLE
+		
+		// Set the ball's velocity
+		if !isAi && normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y >= player.sprite.position.y {
+			let ballDx = BALL_SPEED * -sin(bounceAngle)
+			var ballDy = BALL_SPEED *  cos(bounceAngle)
+			
+			if ballDy < BALL_MIN_Y_INCREMENT { ballDy = BALL_MIN_Y_INCREMENT }
+			ball.shape.physicsBody?.velocity = CGVector(dx: ballDx, dy: ballDy)
+		} else if isAi && normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y <= ball.shape.position.y {
+			let ballDx = BALL_SPEED * -sin(bounceAngle)
+			var ballDy = BALL_SPEED *  cos(bounceAngle)
+			
+			if ballDy < BALL_MIN_Y_INCREMENT { ballDy = BALL_MIN_Y_INCREMENT }
+			ball.shape.physicsBody?.velocity = CGVector(dx: ballDx, dy: -ballDy)
 		}
 	}
 }

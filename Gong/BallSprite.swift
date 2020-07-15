@@ -13,7 +13,7 @@ class BallSprite {
 	
 	public var shape: SKShapeNode!
 	public let radius: CGFloat = DEFAULT_PADDLE_HEIGHT / 2
-	
+		
 	public init() {
 		// Create shape
 		shape = SKShapeNode(circleOfRadius: radius)

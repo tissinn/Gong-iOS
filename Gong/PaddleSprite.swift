@@ -72,7 +72,7 @@ class PaddleSprite {
 		scoreLabel.text = "\(score)"
 		scoreLabel.position = CGPoint(x: 0, y: (DEFAULT_PADDING - DEFAULT_MARGIN) / 2)
 		scoreLabel.fontSize = 48
-		scoreLabel.fontColor = UIColor(red: 139/255, green: 155/255, blue: 180/255, alpha: 1)
+		scoreLabel.fontColor = UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1)
 		scoreLabel.horizontalAlignmentMode = .center
 		scoreLabel.verticalAlignmentMode = .center
 		
