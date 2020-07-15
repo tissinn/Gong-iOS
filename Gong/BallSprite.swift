@@ -3,7 +3,8 @@ import GameplayKit
 
 let BALL_MASK: UInt32 = 0x1 << 3
 
-let BALL_SPEED: CGFloat = 350
+let BALL_BASE_SPEED: CGFloat = 350
+var BALL_Y_SPEED: CGFloat = 350
 let BALL_MAX_ANGLE: CGFloat = CGFloat.pi / 2
 
 class BallSprite {
@@ -11,18 +12,11 @@ class BallSprite {
 	public var shape: SKShapeNode!
 	public let radius: CGFloat = DEFAULT_PADDLE_HEIGHT / 2
 	
-	public var dx: CGFloat = 0
-	public var dy: CGFloat = 0
-	
-	public var left: CGFloat = 0
-	public var right: CGFloat = 0
-	public var top: CGFloat = 0
-	public var bottom: CGFloat = 0
-	
 	public init() {
 		// Create shape
 		shape = SKShapeNode(circleOfRadius: radius)
 		shape.fillColor = .white
+		shape.strokeColor = .clear
 		shape.position = CGPoint(x: 0, y: 0)
 		
 		// Add physics body
