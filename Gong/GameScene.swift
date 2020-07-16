@@ -15,9 +15,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 	var enemy: PaddleSprite!
 	var ball: BallSprite!
 	
-	// Ball particle emitter
-	var ballParticle: SKEmitterNode!
-	
 	var playerScored = false
 	var enemyScored = false
 	
@@ -77,11 +74,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		addChild(enemy.scoreLabel!)
 		
 		ball = BallSprite()
-		addChild(ball.shape!)
-		ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: -300)
-		
-		// Create particle emitter
-		ballParticle = SKEmitterNode()
+		addChild(ball.sprite!)
+		ball.sprite.physicsBody?.velocity = CGVector(dx: 0, dy: -BALL_SERVE_SPEED)
+	
+		print(DEFAULT_MARGIN)
+		print(DEFAULT_PADDLE_WIDTH)
+		print(frame.size.height / 2)
 	}
 	
 	// Update callback
@@ -94,8 +92,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		enemy.update(delta)
 		
 		// Ai follow the ball
-		if (ball.shape.physicsBody?.velocity.dy)! > 0 {
-			var destination = ball.shape.position.x
+		if (ball.sprite.physicsBody?.velocity.dy)! > 0 {
+			var destination = ball.sprite.position.x
 			
 			// If ball is to the left or right of enemy
 			if destination < enemy.sprite.position.x {
@@ -109,21 +107,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 			}
 			
 			// Check if ball is past the paddle
-			if ball.shape.position.y + ball.radius >= enemy.sprite.position.y - (DEFAULT_PADDLE_HEIGHT / 2) {
+			if ball.sprite.position.y + ball.radius >= enemy.sprite.position.y - (DEFAULT_PADDLE_HEIGHT / 2) {
 				destination = enemy.sprite.position.x
 			}
 			
 			// Move to destination
-			enemy.sprite.run(.moveTo(x: destination, duration: 0.15))
+			enemy.sprite.run(.moveTo(x: destination, duration: 0.11))
 		}
 		
 		// If player scores
-		if ball.shape.position.y - (DEFAULT_PADDLE_HEIGHT / 2) > frame.size.height / 2 && !playerScored {
+		if ball.sprite.position.y - (DEFAULT_PADDLE_HEIGHT / 2) > frame.size.height / 2 && !playerScored {
 			didScore(false)
 		}
 		
 		// If enemy scores
-		if ball.shape.position.y + (DEFAULT_PADDLE_HEIGHT / 2) < -(frame.size.height / 2) && !enemyScored {
+		if ball.sprite.position.y + (DEFAULT_PADDLE_HEIGHT / 2) < -(frame.size.height / 2) && !enemyScored {
 			didScore(true)
 		}
 	}
@@ -142,26 +140,80 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		BALL_SPEED = BALL_BASE_SPEED
 		
 		// Reset ball velocity
-		ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+		ball.sprite.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
 		
-		// Create action sequence
-		let hapticHeavy = UIImpactFeedbackGenerator(style: .heavy)
-		let impact = SKAction.run({
-			hapticHeavy.impactOccurred()
-		})
-		let impactWait = SKAction.wait(forDuration: 0.15)
-		let fadeOut = SKAction.fadeOut(withDuration: 0)
-		let wait = SKAction.wait(forDuration: 1)
-		let move = SKAction.move(to: CGPoint(x: 0, y: 0), duration: 0)
-		let fadeIn = SKAction.fadeIn(withDuration: 1)
-		let serve = SKAction.run({
-			let serveDirection = !isAi ? 300 : -300
-			self.ball.shape.physicsBody?.velocity = CGVector(dx: 0, dy: serveDirection)
-			if !isAi { self.playerScored = false } else { self.enemyScored = false }
-		})
+		// Sequence 1
+		do {
+			let colorBlue = SKAction.run({ self.player.scoreLabel.fontColor = UIColor(red: 0, green: 153/255, blue: 219/255, alpha: 1) })
+			let colorRed = SKAction.run({ self.enemy.scoreLabel.fontColor = UIColor(red: 1, green: 0/255, blue: 68/255, alpha: 1) })
+			let hit = SKAction.run({
+				let hapticLight = UIImpactFeedbackGenerator(style: .light)
+				let impact = SKAction.run({
+					hapticLight.impactOccurred()
+				})
+				self.ball.sprite.run(.sequence([ impact ]))
+			})
+			let scaleUp = SKAction.scale(by: 2, duration: 0.25)
+			let scaleDown = SKAction.scale(by: 0.5, duration: 0.25)
+			let shake = SKAction.run({
+				let duration: Float = 0.25
+				let amplitudeX: Float = 10
+				let amplitudeY: Float = 6
+				let numShakes = duration / 0.04
+				var actions: [SKAction] = []
+				
+				for _ in 1...Int(numShakes) {
+					let moveX = Float(arc4random_uniform(UInt32(amplitudeX))) - amplitudeX / 2
+					let moveY = Float(arc4random_uniform(UInt32(amplitudeY))) - amplitudeY / 2
+					let shakeAction = SKAction.moveBy(x: CGFloat(moveX), y: CGFloat(moveY), duration: 0.02)
+					shakeAction.timingMode = SKActionTimingMode.easeOut
+					actions.append(shakeAction)
+					actions.append(shakeAction.reversed())
+				}
+				
+				if !isAi {
+					self.player.scoreLabel.run(.sequence(actions))
+				} else {
+					self.enemy.scoreLabel.run(.sequence(actions))
+				}
+			})
+			let rumble = SKAction.run({
+				let hapticHeavy = UIImpactFeedbackGenerator(style: .heavy)
+				let impact = SKAction.run({
+					hapticHeavy.impactOccurred()
+				})
+				let wait = SKAction.wait(forDuration: 0.15)
+				
+				self.ball.sprite.run(.sequence([ impact, wait, impact, wait, impact ]))
+			})
+			let wait = SKAction.wait(forDuration: 0.5)
+			let colorReset = SKAction.run({ self.player.scoreLabel.fontColor = UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1); self.enemy.scoreLabel.fontColor = UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1) })
+
+
+			if !isAi {
+				player.scoreLabel.run(.sequence([ colorBlue, hit, scaleUp, scaleDown, shake, rumble, wait, colorReset ]))
+			} else {
+				enemy.scoreLabel.run(.sequence([ colorRed, hit, scaleUp, scaleDown, shake, rumble, wait, colorReset ]))
+			}
+		}
 		
-		// Run the sequence
-		ball.shape.run(.sequence([ impact, impactWait, impact, impactWait, impact, fadeOut, wait, move, fadeIn, serve ]))
+		// Sequence 2
+		do {
+			let fadeOut = SKAction.fadeOut(withDuration: 0)
+			let wait = SKAction.wait(forDuration: 2)
+			let move = SKAction.move(to: CGPoint(x: 0, y: 0), duration: 0)
+			let fadeIn = SKAction.fadeIn(withDuration: 1)
+			let serve = SKAction.run({
+				// Determine serve direction
+				let serveDirection = !isAi ? BALL_SERVE_SPEED : -BALL_SERVE_SPEED
+				self.ball.sprite.physicsBody?.velocity = CGVector(dx: 0, dy: serveDirection)
+				
+				// Reset
+				if !isAi { self.playerScored = false } else { self.enemyScored = false }
+			})
+			
+			ball.sprite.run(.sequence([ fadeOut, wait, move, fadeIn, serve ]))
+		}
 	}
 	
 	// Process and handle input
@@ -220,8 +272,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 	private func reflectBall(_ isAi: Bool) {
 		// Calculate the intersection of the ball
 		var relativeIntersect: CGFloat = 0
-		if !isAi { relativeIntersect = player.sprite.position.x - ball.shape.position.x }
-		else { relativeIntersect = enemy.sprite.position.x - ball.shape.position.x }
+		if !isAi { relativeIntersect = player.sprite.position.x - ball.sprite.position.x }
+		else { relativeIntersect = enemy.sprite.position.x - ball.sprite.position.x }
 		
 		// Normalize the intersection
 		var normalizedIntersect = relativeIntersect / (DEFAULT_PADDLE_WIDTH / 2)
@@ -237,18 +289,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		let bounceAngle = normalizedIntersect * BALL_MAX_ANGLE
 		
 		// Set the ball's velocity
-		if !isAi && normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y >= player.sprite.position.y {
+		if !isAi && normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.sprite.position.y >= player.sprite.position.y {
 			let ballDx = BALL_SPEED * -sin(bounceAngle)
 			var ballDy = BALL_SPEED *  cos(bounceAngle)
 			
 			if ballDy < BALL_MIN_Y_INCREMENT { ballDy = BALL_MIN_Y_INCREMENT }
-			ball.shape.physicsBody?.velocity = CGVector(dx: ballDx, dy: ballDy)
-		} else if isAi && normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.shape.position.y <= ball.shape.position.y {
+			ball.sprite.physicsBody?.velocity = CGVector(dx: ballDx, dy: ballDy)
+		} else if isAi && normalizedIntersect <= 1 && normalizedIntersect >= -1 && ball.sprite.position.y <= ball.sprite.position.y {
 			let ballDx = BALL_SPEED * -sin(bounceAngle)
 			var ballDy = BALL_SPEED *  cos(bounceAngle)
 			
 			if ballDy < BALL_MIN_Y_INCREMENT { ballDy = BALL_MIN_Y_INCREMENT }
-			ball.shape.physicsBody?.velocity = CGVector(dx: ballDx, dy: -ballDy)
+			ball.sprite.physicsBody?.velocity = CGVector(dx: ballDx, dy: -ballDy)
 		}
 	}
 }

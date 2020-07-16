@@ -2,7 +2,7 @@ import SpriteKit
 
 var DEFAULT_PADDLE_WIDTH: CGFloat = 0
 var DEFAULT_PADDLE_HEIGHT: CGFloat = 0
-var DEFAULT_SCALAR_TO_FIT: CGFloat = 3.55902
+var DEFAULT_SCALAR_TO_FIT: CGFloat = 4.446667
 var DEFAULT_MARGIN: CGFloat = 0
 let DEFAULT_PADDING: CGFloat = 100
 
@@ -10,9 +10,10 @@ let PADDLE_MASK: UInt32 = 0x1 << 1
 let PADDLE_AI_MASK: UInt32 = 0x1 << 2
 
 func setDefaultPaddleValues(_ frame: CGRect) {
-	DEFAULT_PADDLE_WIDTH = frame.size.width / 4
+	DEFAULT_PADDLE_WIDTH = frame.size.width / 5
 	DEFAULT_PADDLE_HEIGHT = DEFAULT_PADDLE_WIDTH / 5
 	DEFAULT_MARGIN = (DEFAULT_PADDLE_WIDTH * DEFAULT_SCALAR_TO_FIT)
+	BALL_BASE_SPEED = DEFAULT_MARGIN
 }
 
 enum PaddlePosition {
