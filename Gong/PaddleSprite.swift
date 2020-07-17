@@ -8,6 +8,7 @@ let DEFAULT_PADDING: CGFloat = 100
 
 let PADDLE_MASK: UInt32 = 0x1 << 1
 let PADDLE_AI_MASK: UInt32 = 0x1 << 2
+let PADDLE_AI_DIFFICULTY: TimeInterval = 0.095
 
 func setDefaultPaddleValues(_ frame: CGRect) {
 	DEFAULT_PADDLE_WIDTH = frame.size.width / 5

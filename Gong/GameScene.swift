@@ -11,6 +11,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 	var promptInstruction: SKLabelNode!
 	var promptText: SKLabelNode!
 	var gameBegan = false
+	var gameEnded = true
 	
 	var centerLineLeft: SKSpriteNode!
 	var centerLineRight: SKSpriteNode!
@@ -23,6 +24,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 	
 	var playerScored = false
 	var enemyScored = false
+	var scorePrompt: SKLabelNode!
 	
 	// Executes once the scene is presented
 	override func sceneDidLoad() {
@@ -49,12 +51,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		addChild(rightWall)
 		
 		// Begin game prompt
-		promptBackground = SKSpriteNode(color: UIColor(red: 0, green: 0, blue: 0, alpha: 0.25), size: frame.size)
+		promptBackground = SKSpriteNode(color: UIColor(red: 0, green: 0, blue: 0, alpha: 0.5), size: frame.size)
 		promptBackground.position = CGPoint(x: 0, y: 0)
 		promptBackground.zPosition = 2
 		addChild(promptBackground!)
 		
-		promptBox = SKSpriteNode(color: UIColor(red: 0, green: 0, blue: 0, alpha: 0.5), size: CGSize(width: frame.size.width, height: DEFAULT_PADDLE_WIDTH * 2))
+		promptBox = SKSpriteNode(color: UIColor(red: 0, green: 0, blue: 0, alpha: 1), size: CGSize(width: frame.size.width, height: DEFAULT_PADDLE_WIDTH * 2))
 		promptBox.position = CGPoint(x: 0, y: 0)
 		promptBox.zPosition = 2
 		addChild(promptBox!)
@@ -91,7 +93,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		centerCircle = SKShapeNode(circleOfRadius: DEFAULT_PADDLE_WIDTH / 2)
 		centerCircle.position = CGPoint(x: 0, y: 0)
 		centerCircle.fillColor = .clear
-		centerCircle.lineWidth = DEFAULT_PADDLE_HEIGHT / 3
+		centerCircle.lineWidth = DEFAULT_PADDLE_HEIGHT / 3.25
 		centerCircle.strokeColor = UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1)
 		addChild(centerCircle!)
 		
@@ -112,6 +114,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		
 		ball = BallSprite()
 		addChild(ball.sprite!)
+		
+		scorePrompt = SKLabelNode(fontNamed: "FredokaOne-Regular")
+		scorePrompt.text = "GONG!"
+		scorePrompt.zPosition = 2
+		scorePrompt.fontSize = DEFAULT_PADDLE_WIDTH
+		scorePrompt.fontColor = UIColor(red: 254/255, green: 174/255, blue: 52/255, alpha: 1)
+		scorePrompt.verticalAlignmentMode = .center
+		scorePrompt.horizontalAlignmentMode = .center
+		scorePrompt.run(.fadeOut(withDuration: 0))
+		addChild(scorePrompt!)
 	}
 	
 	// Update callback
@@ -144,17 +156,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 			}
 			
 			// Move to destination
-			enemy.sprite.run(.moveTo(x: destination, duration: 0.07))
+			enemy.sprite.run(.moveTo(x: destination, duration: PADDLE_AI_DIFFICULTY))
 		}
 		
 		// If player scores
 		if ball.sprite.position.y - (DEFAULT_PADDLE_HEIGHT / 2) > frame.size.height / 2 && !playerScored {
-			didScore(false)
+			player.score += 1
+			
+			if player.score >= 11 {
+				didEndGame(true)
+			} else {
+				didScore(false)
+			}
 		}
 		
 		// If enemy scores
 		if ball.sprite.position.y + (DEFAULT_PADDLE_HEIGHT / 2) < -(frame.size.height / 2) && !enemyScored {
-			didScore(true)
+			enemy.score += 1
+			
+			if enemy.score >= 11 {
+				didEndGame(false)
+			} else {
+				didScore(true)
+			}
 		}
 	}
 	
@@ -162,10 +186,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 	private func didScore(_ isAi: Bool) {
 		if !isAi {
 			playerScored = true
-			player.score += 1
 		} else {
 			enemyScored = true
-			enemy.score += 1
 		}
 		
 		// Reset ball speed
@@ -174,8 +196,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		// Reset ball velocity
 		ball.sprite.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
 		
+		// Show "Gong" label
+		do {
+			let impact = SKAction.run({
+				let hapticHeavy = UIImpactFeedbackGenerator(style: .heavy)
+				hapticHeavy.impactOccurred()
+			})
+			let fadeIn = SKAction.fadeIn(withDuration: 0)
+			let scaleUp = SKAction.scale(by: 2, duration: 0.5)
+			let fadeOut = SKAction.run({ self.scorePrompt.run(.fadeOut(withDuration: 0.5)) })
+			let wait = SKAction.wait(forDuration: 0.5)
+			let scaleDown = SKAction.scale(by: 0.5, duration: 0)
+			
+			scorePrompt.run(.sequence([ impact, fadeIn, fadeOut, scaleUp, wait, scaleDown ]))
+		}
+		
 		// Sequence 1
 		do {
+			let initWait = SKAction.wait(forDuration: 0.5)
 			let colorBlue = SKAction.run({ self.player.scoreLabel.fontColor = UIColor(red: 0, green: 153/255, blue: 219/255, alpha: 1) })
 			let colorRed = SKAction.run({ self.enemy.scoreLabel.fontColor = UIColor(red: 1, green: 0/255, blue: 68/255, alpha: 1) })
 			let hit = SKAction.run({
@@ -223,9 +261,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
 
 			if !isAi {
-				player.scoreLabel.run(.sequence([ colorBlue, hit, scaleUp, scaleDown, shake, rumble, wait, colorReset ]))
+				player.scoreLabel.run(.sequence([ initWait, colorBlue, hit, scaleUp, scaleDown, shake, rumble, wait, colorReset ]))
 			} else {
-				enemy.scoreLabel.run(.sequence([ colorRed, hit, scaleUp, scaleDown, shake, rumble, wait, colorReset ]))
+				enemy.scoreLabel.run(.sequence([ initWait, colorRed, hit, scaleUp, scaleDown, shake, rumble, wait, colorReset ]))
 			}
 		}
 		
@@ -248,20 +286,56 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		}
 	}
 	
+	// Either player or enemy won
+	private func didEndGame(_ playerWon: Bool) {
+		if playerWon {
+			promptInstruction.text = "YOU WON \(player.score)-\(enemy.score)"
+			promptInstruction.fontColor = UIColor(red: 0, green: 153/255, blue: 219/255, alpha: 1)
+			promptText.text = "Tap to play again."
+		} else {
+			promptInstruction.text = "YOU LOSE \(enemy.score)-\(player.score)"
+			promptInstruction.fontColor = UIColor(red: 1, green: 0/255, blue: 68/255, alpha: 1)
+			promptText.text = "Tap to try again."
+		}
+		
+		// Reset ball speed
+		BALL_SPEED = BALL_BASE_SPEED
+		
+		// Reset ball velocity
+		ball.sprite.run(.fadeOut(withDuration: 0))
+		ball.sprite.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+		ball.sprite.position = CGPoint(x: 0, y: 0)
+		
+		// Reset prompt
+		gameBegan = false
+		gameEnded = false
+		
+		let fadeInSequence = SKAction.sequence([ .wait(forDuration: 1), .fadeIn(withDuration: 1), .run({ self.gameEnded = true; self.ball.sprite.run(.fadeIn(withDuration: 0)) }) ])
+		
+		promptBackground.run(.fadeIn(withDuration: 1))
+		promptBox.run(fadeInSequence)
+		promptText.run(fadeInSequence)
+		promptInstruction.run(fadeInSequence)
+	}
+	
 	// Just touched screen
 	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-		if !gameBegan {
+		if !gameBegan && gameEnded {
 			gameBegan = true
+			
+			// Reset scores
+			player.score = 0
+			enemy.score = 0
 			
 			// Impulse
 			let haptic = UIImpactFeedbackGenerator(style: .heavy)
 			haptic.impactOccurred()
 			
 			// Remove prompt
-			promptBackground.removeFromParent()
-			promptBox.removeFromParent()
-			promptInstruction.removeFromParent()
-			promptText.removeFromParent()
+			promptBackground.run(.fadeOut(withDuration: 0.5))
+			promptBox.run(.fadeOut(withDuration: 0.5))
+			promptInstruction.run(.fadeOut(withDuration: 0.5))
+			promptText.run(.fadeOut(withDuration: 0.5))
 			
 			// Serve ball
 			ball.sprite.physicsBody?.velocity = CGVector(dx: 0, dy: -BALL_SERVE_SPEED)
@@ -335,8 +409,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		// Check if == 0.0
 		if normalizedIntersect == 0 {
 			let rand = Int.random(in: 1...2)
-			if rand == 1 { normalizedIntersect = 0.1 }
-			else if rand == 2 { normalizedIntersect = -0.1 }
+			if rand == 1 { normalizedIntersect = 0.2 }
+			else if rand == 2 { normalizedIntersect = -0.2 }
 		}
 		
 		// Calculate ball's angle
