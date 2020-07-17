@@ -6,6 +6,12 @@ let WALL_MASK: UInt32 = 0x1 << 4
 class GameScene: SKScene, SKPhysicsContactDelegate {
 	
 	// Background sprites
+	var promptBackground: SKSpriteNode!
+	var promptBox: SKSpriteNode!
+	var promptInstruction: SKLabelNode!
+	var promptText: SKLabelNode!
+	var gameBegan = false
+	
 	var centerLineLeft: SKSpriteNode!
 	var centerLineRight: SKSpriteNode!
 	var centerCircle: SKShapeNode!
@@ -42,6 +48,37 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		rightWall.physicsBody?.categoryBitMask = WALL_MASK
 		addChild(rightWall)
 		
+		// Begin game prompt
+		promptBackground = SKSpriteNode(color: UIColor(red: 0, green: 0, blue: 0, alpha: 0.25), size: frame.size)
+		promptBackground.position = CGPoint(x: 0, y: 0)
+		promptBackground.zPosition = 2
+		addChild(promptBackground!)
+		
+		promptBox = SKSpriteNode(color: UIColor(red: 0, green: 0, blue: 0, alpha: 0.5), size: CGSize(width: frame.size.width, height: DEFAULT_PADDLE_WIDTH * 2))
+		promptBox.position = CGPoint(x: 0, y: 0)
+		promptBox.zPosition = 2
+		addChild(promptBox!)
+		
+		promptInstruction = SKLabelNode(fontNamed: "Montserrat-BLACK")
+		promptInstruction.position = CGPoint(x: 0, y: DEFAULT_PADDLE_WIDTH / 3)
+		promptInstruction.zPosition = 2
+		promptInstruction.text = "FIRST TO 11 WINS"
+		promptInstruction.verticalAlignmentMode = .center
+		promptInstruction.horizontalAlignmentMode = .center
+		promptInstruction.fontColor = .white
+		promptInstruction.fontSize = DEFAULT_PADDLE_WIDTH / 2
+		addChild(promptInstruction!)
+		
+		promptText = SKLabelNode(fontNamed: "Montserrat-SemiBold")
+		promptText.position = CGPoint(x: 0, y: -(DEFAULT_PADDLE_WIDTH / 3))
+		promptText.zPosition = 2
+		promptText.text = "Tap to begin the game."
+		promptText.verticalAlignmentMode = .center
+		promptText.horizontalAlignmentMode = .center
+		promptText.fontColor = .white
+		promptText.fontSize = DEFAULT_PADDLE_WIDTH / 3
+		addChild(promptText!)
+		
 		// Center divider
 		centerLineLeft = SKSpriteNode(color: UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1), size: CGSize(width: (frame.size.width / 2) - (DEFAULT_PADDLE_WIDTH / 2), height: DEFAULT_PADDLE_HEIGHT / 4))
 		centerLineLeft.position = CGPoint(x: -(frame.size.width / 2) + (centerLineLeft.size.width / 2), y: 0)
@@ -54,7 +91,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		centerCircle = SKShapeNode(circleOfRadius: DEFAULT_PADDLE_WIDTH / 2)
 		centerCircle.position = CGPoint(x: 0, y: 0)
 		centerCircle.fillColor = .clear
-		centerCircle.lineWidth = DEFAULT_PADDLE_HEIGHT / 4
+		centerCircle.lineWidth = DEFAULT_PADDLE_HEIGHT / 3
 		centerCircle.strokeColor = UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1)
 		addChild(centerCircle!)
 		
@@ -75,11 +112,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		
 		ball = BallSprite()
 		addChild(ball.sprite!)
-		ball.sprite.physicsBody?.velocity = CGVector(dx: 0, dy: -BALL_SERVE_SPEED)
-	
-		print(DEFAULT_MARGIN)
-		print(DEFAULT_PADDLE_WIDTH)
-		print(frame.size.height / 2)
 	}
 	
 	// Update callback
@@ -112,7 +144,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 			}
 			
 			// Move to destination
-			enemy.sprite.run(.moveTo(x: destination, duration: 0.11))
+			enemy.sprite.run(.moveTo(x: destination, duration: 0.07))
 		}
 		
 		// If player scores
@@ -216,17 +248,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 		}
 	}
 	
+	// Just touched screen
+	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+		if !gameBegan {
+			gameBegan = true
+			
+			// Impulse
+			let haptic = UIImpactFeedbackGenerator(style: .heavy)
+			haptic.impactOccurred()
+			
+			// Remove prompt
+			promptBackground.removeFromParent()
+			promptBox.removeFromParent()
+			promptInstruction.removeFromParent()
+			promptText.removeFromParent()
+			
+			// Serve ball
+			ball.sprite.physicsBody?.velocity = CGVector(dx: 0, dy: -BALL_SERVE_SPEED)
+		}
+	}
+	
 	// Process and handle input
 	override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
 		for touch in touches {
 			let location = touch.location(in: self)
 			
-			if location.x + (DEFAULT_PADDLE_WIDTH / 2) > (frame.size.width / 2) {
-				player.sprite.position.x = (frame.size.width / 2) - (DEFAULT_PADDLE_WIDTH / 2)
-			} else if location.x - (DEFAULT_PADDLE_WIDTH / 2) < -(frame.size.width / 2) {
-				player.sprite.position.x = -(frame.size.width / 2) + (DEFAULT_PADDLE_WIDTH / 2)
-			} else {
-				player.input(location)
+			if gameBegan {
+				if location.x + (DEFAULT_PADDLE_WIDTH / 2) > (frame.size.width / 2) {
+					player.sprite.position.x = (frame.size.width / 2) - (DEFAULT_PADDLE_WIDTH / 2)
+				} else if location.x - (DEFAULT_PADDLE_WIDTH / 2) < -(frame.size.width / 2) {
+					player.sprite.position.x = -(frame.size.width / 2) + (DEFAULT_PADDLE_WIDTH / 2)
+				} else {
+					player.input(location)
+				}
 			}
 		}
 	}

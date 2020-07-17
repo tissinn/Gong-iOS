@@ -21,20 +21,6 @@ enum PaddlePosition {
 	case Bottom
 }
 
-let PADDLE_DEFAULT_DIFFICULTY: [Int: CGFloat] = [
-	5: 0.325,
-	4: 0.300,
-	3: 0.275,
-	2: 0.250,
-	1: 0.225,
-	0: 0.150,
-	-1: 0.200,
-	-2: 0.150,
-	-3: 0.125,
-	-4: 0.100,
-	-5: 0.075
-]
-
 class PaddleSprite {
 	
 	public var sprite: SKSpriteNode!
@@ -72,7 +58,7 @@ class PaddleSprite {
 		scoreLabel = SKLabelNode(fontNamed: "Montserrat-Bold")
 		scoreLabel.text = "\(score)"
 		scoreLabel.position = CGPoint(x: 0, y: (DEFAULT_PADDING - DEFAULT_MARGIN) / 2)
-		scoreLabel.fontSize = 48
+		scoreLabel.fontSize = 2 * (DEFAULT_PADDLE_WIDTH / 3)
 		scoreLabel.fontColor = UIColor(red: 90/255, green: 105/255, blue: 136/255, alpha: 1)
 		scoreLabel.horizontalAlignmentMode = .center
 		scoreLabel.verticalAlignmentMode = .center

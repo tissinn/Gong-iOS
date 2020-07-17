@@ -3,8 +3,7 @@ import SpriteKit
 
 class GameViewController: UIViewController {
 	
-	var scene: GameScene!
-	var defaultBgColor = UIColor()
+	var scene: MainMenuScene!
 
 	// Executed once the view is loaded
     override func viewDidLoad() {
@@ -15,7 +14,7 @@ class GameViewController: UIViewController {
 		spriteKitView?.isMultipleTouchEnabled = false
 		
 		// Create & configure the scene
-		scene = GameScene(size: spriteKitView!.bounds.size)
+		scene = MainMenuScene(size: spriteKitView!.bounds.size)
 		scene.anchorPoint = CGPoint(x: 0.5, y: 0.5)
 		scene.scaleMode = .aspectFill
 		
